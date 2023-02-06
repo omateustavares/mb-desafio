@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider      = "mysql"
+  url           = env("DATABASE_URL")
+  relationMode  = "prisma"
+}
+
+
+model User {
+  id         String   @id @default(uuid())
+  username   String?  @unique
+  name       String   @db.Text
+  bio        String?  @db.Text
+  role       String? 
+  email      String?  @unique
+  avatar_url String?
+  created_at DateTime @default(now())
+
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                  String  @id @default(cuid())
+  user_id             String
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String? @db.Text
+  access_token        String? @db.Text
+  expires_at          Int?
+  token_type          String?
+  scope               String?
+  id_token            String? @db.Text
+  session_state       String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_account_id])
+  @@map("accounts")
+  @@index([user_id])
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  session_token String   @unique
+  user_id       String
+  expires       DateTime
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("sessions")
+}
+
+
+model Events {
+  id    String   @id @default(cuid())
+  title String @db.Text
+  description String @db.Text
+  date_and_time DateTime?
+  local String @db.Text
+  additional_information String? @db.Text
+
+  @@map("events")
+}
+
+model UserEvents {
+  id          String   @id @default(cuid())
+  email_user  String
+  event_id    String
+
+  @@map("user_events")
+}
